@@ -1,3 +1,9 @@
+## Ordo
+Ordo is ordering system for small printing company.
+
+Implementation is inspired by the book [The Road to React with Firebase](https://github.com/the-road-to-react-with-firebase)
+
+---
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
