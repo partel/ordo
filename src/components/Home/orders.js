@@ -4,6 +4,7 @@ import {compose} from "recompose";
 
 import OrdersList from "./ordersList";
 import {withFirebase} from "../Firebase";
+import Spinner from "react-bootstrap/Spinner";
 
 class Orders extends Component {
   constructor(props) {
@@ -84,7 +85,7 @@ class Orders extends Component {
           </button>
         )}
 
-        {loading && <div>Loading...</div>}
+        {loading && <Spinner animation="border"/>}
 
         {orders ? (
           <OrdersList

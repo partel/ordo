@@ -1,10 +1,11 @@
 import React, {Component} from "react";
 import {Link} from "react-router-dom";
-import {inject, observer} from "mobx-react";
-import {compose} from "recompose";
-
-import {withFirebase} from "../Firebase";
 import * as ROUTES from "../../constants/routes";
+import {compose} from "recompose";
+import {withFirebase} from "../Firebase";
+import {inject, observer} from "mobx-react";
+import Table from "react-bootstrap/Table";
+import Spinner from "react-bootstrap/Spinner";
 
 class UserList extends Component {
   constructor(props) {
@@ -35,34 +36,32 @@ class UserList extends Component {
     return (
       <div>
         <h2>Users</h2>
-        {loading && <div>Loading...</div>}
-        <ul>
+        {loading && <Spinner animation="border"/>}
+        <Table striped bordered hover>
+          <thead>
+          <tr>
+            <th>ID</th>
+            <th>E-Mail</th>
+            <th>Username</th>
+          </tr>
+          </thead>
+          <tbody>
           {users.map(user => (
-            <li key={user.uid}>
-              <span>
-                <strong>ID: </strong>
-                {user.uid}
-              </span>
-              <span>
-                <strong>E-Mail: </strong>
-                {user.email}
-              </span>
-              <span>
-                <strong>Username: </strong>
-                {user.username}
-              </span>
-              <span>
+            <tr key={user.uid}>
+              <td>
                 <Link to={{
                   pathname: `${ROUTES.ADMIN}/${user.uid}`
                 }}
-                >
-                  {" "}
-                  Details{" "}
+                >{user.uid}
                 </Link>
-              </span>
-            </li>
+              </td>
+              <td>{user.email}</td>
+              <td>{user.username}</td>
+            </tr>
           ))}
-        </ul>
+          </tbody>
+        </Table>
+
       </div>
     );
   }
