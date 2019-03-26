@@ -1,16 +1,17 @@
-import React, { Component } from "react";
-import { Link, withRouter } from "react-router-dom";
-import { compose } from "recompose";
+import React, {Component} from "react";
+import {Link, withRouter} from "react-router-dom";
+import {compose} from "recompose";
 
-import { withFirebase } from "../Firebase";
+import {withFirebase} from "../Firebase";
 import * as ROUTES from "../../constants/routes";
 import * as ROLES from "../../constants/roles";
+import Form from "react-bootstrap/Form";
 
 const SignInUpPage = () => (
-  <div>
+  <>
     <h1>Sign up</h1>
-    <SignUpForm />
-  </div>
+    <SignUpForm/>
+  </>
 );
 
 const INITIAL_STATE = {
@@ -29,7 +30,7 @@ class SignUpFormBase extends Component {
   }
 
   onSubmit = event => {
-    const { username, email, passwordOne, isAdmin } = this.state;
+    const {username, email, passwordOne, isAdmin} = this.state;
     const roles = [];
     if (isAdmin) {
       roles.push(ROLES.ADMIN);
@@ -47,17 +48,17 @@ class SignUpFormBase extends Component {
         return this.props.firebase.doSendEmailVerification();
       })
       .then(() => {
-        this.setState({ ...INITIAL_STATE });
+        this.setState({...INITIAL_STATE});
         this.props.history.push(ROUTES.HOME);
       })
       .catch(error => {
-        this.setState({ error });
+        this.setState({error});
       });
     event.preventDefault();
   };
 
   onChange = event => {
-    this.setState({ [event.target.name]: event.target.value });
+    this.setState({[event.target.name]: event.target.value});
   };
 
   onChangeCheckBox = event => {
@@ -82,7 +83,7 @@ class SignUpFormBase extends Component {
       username === "";
 
     return (
-      <form onSubmit={this.onSubmit}>
+      <Form onSubmit={this.onSubmit}>
         <input
           name="username"
           value={username}
@@ -123,7 +124,7 @@ class SignUpFormBase extends Component {
         </button>
 
         {error && <p>{error.message}</p>}
-      </form>
+      </Form>
     );
   }
 }
@@ -140,4 +141,4 @@ const SignUpForm = compose(
 )(SignUpFormBase);
 
 export default SignInUpPage;
-export { SignUpForm, SignUpLink };
+export {SignUpForm, SignUpLink};

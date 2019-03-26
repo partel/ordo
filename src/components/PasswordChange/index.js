@@ -1,6 +1,7 @@
-import React, { Component } from "react";
+import React, {Component} from "react";
 
-import { withFirebase } from "../Firebase";
+import {withFirebase} from "../Firebase";
+import Form from "react-bootstrap/Form";
 
 const INITIAL_STATE = {
   passwordOne: "",
@@ -11,34 +12,34 @@ const INITIAL_STATE = {
 class PasswordChangeForm extends Component {
   constructor(props) {
     super(props);
-    this.state = { ...INITIAL_STATE };
+    this.state = {...INITIAL_STATE};
   }
 
   onSubmit = event => {
-    const { passwordOne } = this.state;
+    const {passwordOne} = this.state;
 
     this.props.firebase
       .doPasswordUpdate(passwordOne)
       .then(() => {
-        this.setState({ ...INITIAL_STATE });
+        this.setState({...INITIAL_STATE});
       })
       .catch(error => {
-        this.setState({ error });
+        this.setState({error});
       });
 
     event.preventDefault();
   };
 
   onChange = event => {
-    this.setState({ [event.target.name]: event.target.value });
+    this.setState({[event.target.name]: event.target.value});
   };
 
   render() {
-    const { passwordOne, passwordTwo, error } = this.state;
+    const {passwordOne, passwordTwo, error} = this.state;
     const isInvalid = passwordOne !== passwordTwo || passwordOne === "";
 
     return (
-      <form onSubmit={this.onSubmit}>
+      <Form onSubmit={this.onSubmit}>
         <input
           name="passwordOne"
           value={passwordOne}
@@ -58,7 +59,7 @@ class PasswordChangeForm extends Component {
         </button>
 
         {error && <p>{error.message}</p>}
-      </form>
+      </Form>
     );
   }
 }

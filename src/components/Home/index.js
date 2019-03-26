@@ -26,12 +26,12 @@ class HomePage extends Component {
 
   render() {
     return (
-      <div>
+      <>
         <h1>Ordo Home</h1>
         <p>User orders and add new order</p>
 
         <Orders users={this.props.userStore.users}/>
-      </div>
+      </>
     );
   }
 }
