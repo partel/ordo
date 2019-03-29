@@ -52,7 +52,10 @@ class Firebase {
   orders = () => this.db.collection("orders");
 
   //*** Files API **///
-  upload = file => this.files.child(file.name);
+  upload = file => {
+    const ref = this.files.child(file.name);
+    return ref.put(file);
+  };
 
   //*** Merge Auth and DB User API **//
   onAuthUserListener = (next, fallback) =>

@@ -94,6 +94,13 @@ class OrderForm extends Component {
     this.setState({deadline: date});
   };
 
+  onUploadFiles = event => {
+    const file = event.target.files[0];
+    this.props.firebase.upload(file).then(snapshot => {
+      console.log("uploaded: " + snapshot);
+    });
+  };
+
   render() {
     const {name, number, quantity, description, deadline, validated, error} = this.state;
 
@@ -137,6 +144,13 @@ class OrderForm extends Component {
               <Form.Group controlId="description">
                 <Form.Label>Description</Form.Label>
                 <Form.Control as="textarea" rows="7" value={description} onChange={this.onChange}/>
+              </Form.Group>
+            </Form.Row>
+
+            <Form.Row>
+              <Form.Group>
+                <Form.Label>Files</Form.Label>
+                <Form.Control name="images[]" type="file" multiple onChange={this.onUploadFiles}/>
               </Form.Group>
             </Form.Row>
 
