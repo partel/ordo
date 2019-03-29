@@ -2,6 +2,7 @@ import app from "firebase/app";
 import "firebase/auth";
 import "firebase/database";
 import "firebase/firestore";
+import "firebase/storage";
 
 const config = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -21,6 +22,7 @@ class Firebase {
     this.emailAuthProvider = app.auth.EmailAuthProvider;
     this.auth = app.auth();
     this.db = app.firestore();
+    this.files = app.storage().ref()
   }
 
   //*** Auth API **//
@@ -48,6 +50,9 @@ class Firebase {
   //*** Order API **//
   order = uid => this.db.collection("orders").doc(uid);
   orders = () => this.db.collection("orders");
+
+  //*** Files API **///
+  upload = file => this.files.child(file.name);
 
   //*** Merge Auth and DB User API **//
   onAuthUserListener = (next, fallback) =>

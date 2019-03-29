@@ -21,7 +21,7 @@ const NavigationAuth = ({authUser}) => (
     <Navbar.Toggle aria-controls="basic-navbar-nav"/>
     <Navbar.Collapse id="basic-navbar-nav">
       <Nav>
-        <Nav.Link href={ROUTES.HOME}>Home</Nav.Link>
+        <Nav.Link href={ROUTES.ORDERS}>Orders</Nav.Link>
         {
           authUser.roles.includes(ROLES.ADMIN) && (
             <Nav.Link href={ROUTES.ADMIN}>Admin</Nav.Link>
