@@ -15,7 +15,7 @@ class Orders extends Component {
   }
 
   componentDidMount() {
-    if (!this.props.orderStore.ordersList) {
+    if (!this.props.orderStore.ordersList.length) {
       this.setState({loading: true});
     }
     this.onListenForOrders();
