@@ -47,6 +47,10 @@ class Firebase {
   user = uid => this.db.collection("users").doc(uid);
   users = () => this.db.collection("users");
 
+  //*** Company API **//
+  company = code => this.db.collection("companies").doc(code);
+  companies = () => this.db.collection("companies");
+
   //*** Order API **//
   order = uid => this.db.collection("orders").doc(uid);
   orders = () => this.db.collection("orders");
@@ -56,6 +60,7 @@ class Firebase {
     const ref = this.files.child(file.name);
     return ref.put(file);
   };
+
 
   //*** Merge Auth and DB User API **//
   onAuthUserListener = (next, fallback) =>
