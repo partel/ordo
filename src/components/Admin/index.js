@@ -72,9 +72,9 @@ class AdminPage extends Component {
 const condition = authUser => authUser && authUser.roles.includes(ROLES.ADMIN);
 
 export default compose(
-  withEmailVerification,
-  withAuthorization(condition),
   withFirebase,
   inject("userStore", "companyStore"),
-  observer
+  observer,
+  withEmailVerification,
+  withAuthorization(condition),
 )(AdminPage);
