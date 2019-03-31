@@ -2,15 +2,16 @@ import React, {Component} from "react";
 import * as ROUTES from "../../constants/routes";
 import Form from "react-bootstrap/Form";
 import Col from "react-bootstrap/Col";
-import {compose} from "recompose";
-import {withRouter} from "react-router-dom";
-import {withFirebase} from "../Firebase";
-import Button from "react-bootstrap/Button";
-import Alert from "react-bootstrap/Alert";
-import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
 import Badge from "react-bootstrap/Badge";
+import {DRAFT, REQUESTED} from "../../constants/states";
+import Alert from "react-bootstrap/Alert";
+import Button from "react-bootstrap/Button";
+import DatePicker from "react-datepicker";
+import {compose} from "recompose";
+import {withRouter} from "react-router";
+import {withFirebase} from "../Firebase";
 
 const INITIAL_STATE = {
   name: "",
@@ -18,6 +19,7 @@ const INITIAL_STATE = {
   quantity: "",
   description: "",
   deadline: null,
+  state: DRAFT,
 
   validated: false,
   error: null
@@ -45,6 +47,7 @@ class OrderForm extends Component {
           if (order.deadline) {
             order.deadline = new Date(order.deadline.seconds * 1000)
           }
+          order.state = REQUESTED;
           return this.setState({...order});
         })
         .catch(error => this.setState({error: error}))
@@ -55,7 +58,7 @@ class OrderForm extends Component {
   }
 
   handleSubmit(event) {
-    const {name, number, quantity, description, deadline} = this.state;
+    const {name, number, quantity, description, deadline, state} = this.state;
     const form = event.currentTarget;
 
     event.preventDefault();
@@ -67,13 +70,16 @@ class OrderForm extends Component {
         number,
         quantity,
         description,
-        deadline
+        deadline,
+        state
       };
       if (this.isNew()) {
-        this.props.firebase.orders().add(orderData).then(() => this.closeForm())
+        this.props.firebase.orders().add(orderData)
+          .then(() => this.closeForm())
           .catch(error => this.setState({error: error}));
       } else {
-        this.props.firebase.order(this.props.match.params.id).set(orderData).then(() => this.closeForm())
+        this.props.firebase.order(this.props.match.params.id).set(orderData)
+          .then(() => this.closeForm())
           .catch(error => this.setState({error: error}));
       }
 
@@ -102,11 +108,11 @@ class OrderForm extends Component {
   };
 
   render() {
-    const {name, number, quantity, description, deadline, validated, error} = this.state;
+    const {name, number, quantity, description, deadline, state, validated, error} = this.state;
 
     return (
       <>
-        <h1>Order <Badge pill variant="info">{this.props.match.params.id}</Badge></h1>
+        <h1>Order <Badge pill variant="info">{state}</Badge></h1>
         {error ? (<Alert varian="danger">{error.message}</Alert>) :
           (<Form noValidate validated={validated} onSubmit={e => this.handleSubmit(e)}>
             <Form.Row>
