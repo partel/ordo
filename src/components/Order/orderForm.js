@@ -1,11 +1,12 @@
 import React, {Component} from "react";
 import * as ROUTES from "../../constants/routes";
+import * as CATEGORIES from "../../constants/categories";
+import * as STATES from "../../constants/states";
 import Form from "react-bootstrap/Form";
-import Col from "react-bootstrap/Col";
 
+import Col from "react-bootstrap/Col";
 import "react-datepicker/dist/react-datepicker.css";
 import Badge from "react-bootstrap/Badge";
-import {DRAFT, REQUESTED} from "../../constants/states";
 import Alert from "react-bootstrap/Alert";
 import Button from "react-bootstrap/Button";
 import DatePicker from "react-datepicker";
@@ -13,157 +14,177 @@ import {compose} from "recompose";
 import {withRouter} from "react-router";
 import {withFirebase} from "../Firebase";
 import {inject, observer} from "mobx-react";
+import Spinner from "react-bootstrap/Spinner";
 
-const INITIAL_STATE = {
+const EMPTY_ORDER = {
   name: "",
   number: "",
   quantity: "",
   description: "",
   deadline: null,
-  state: DRAFT,
-
-  validated: false,
-  error: null
+  state: STATES.DRAFT,
+  categories: []
 };
-
-const CATEGORIES = ['Tampo', 'Siid', 'Tikand'];
 
 class OrderForm extends Component {
 
   constructor(props) {
     super(props);
-    CATEGORIES.forEach(cat => INITIAL_STATE[`is${cat}`] = false);
-
-    this.state = {...INITIAL_STATE};
+    props.orderStore.setCurrentOrder({...EMPTY_ORDER});
+    this.state = {validated: false, error: null, loading: false};
   }
 
   isNew = () => this.props.match.params.id === "new";
 
+  currentOrder = () => this.props.orderStore.currentOrder;
 
   componentDidMount() {
-    if (!this.isNew()) {
-      this.props.firebase.order(this.props.match.params.id).get()
-        .then(snapshot => {
-          const order = snapshot.data();
-          if (order.deadline) {
-            order.deadline = new Date(order.deadline.seconds * 1000)
-          }
-          order.state = REQUESTED;
-          return this.setState({...order});
-        })
-        .catch(error => this.setState({error: error}))
-    }
-  }
+    this.setState({loading: true});
+    const orderRef = this.isNew() ? this.props.firebase.newOrder() : this.props.firebase.order(this.props.match.params.id);
+    this.props.orderStore.setCurrentOrderRef(orderRef);
 
-  componentWillUnmount() {
-  }
-
-  handleSubmit(event) {
-    const {name, number, quantity, description, deadline, state} = this.state;
-    const form = event.currentTarget;
-
-    event.preventDefault();
-    event.stopPropagation();
-    this.setState({validated: true});
-    if (form.checkValidity() === true) {
-      const orderData = {
-        name,
-        number,
-        quantity,
-        description,
-        deadline,
-        state
-      };
-      orderData.creator = this.props.sessionStore.authUser.uid;
-      orderData.company = this.props.sessionStore.companyCode;
-      if (this.isNew()) {
-        this.props.firebase.orders().add(orderData)
-          .then(() => this.closeForm())
-          .catch(error => this.setState({error: error}));
+    orderRef.get().then(snapshot => {
+      if (snapshot.exists) {
+        const order = snapshot.data();
+        if (order.deadline) {
+          order.deadline = new Date(order.deadline.seconds * 1000)
+        }
+        this.props.orderStore.setCurrentOrder({...order})
       } else {
-        this.props.firebase.order(this.props.match.params.id).set(orderData)
-          .then(() => this.closeForm())
-          .catch(error => this.setState({error: error}));
+        this.props.orderStore.setCurrentOrder({
+          ...EMPTY_ORDER,
+          creator: this.props.sessionStore.authUser.uid,
+          company: this.props.sessionStore.companyCode,
+          createdAt: this.props.firebase.fieldValue.serverTimestamp()
+        });
+        const company = this.props.firebase.company(this.props.sessionStore.companyCode);
+        company.update({
+          orderSequence: this.props.firebase.fieldValue.increment(1)
+        }).then(() => {
+          company.get().then(snapshot => {
+            this.props.orderStore.currentOrder.number = `${company.id}${snapshot.data().orderSequence.toString().padStart(5, '0')}`
+          })
+        });
       }
 
-    }
+      this.setState({loading: false})
+    })
+      .catch(error => this.setState({error: error, loading: false}))
   }
 
-  closeForm = () => this.props.history.push(ROUTES.ORDERS);
+  onSubmit(event) {
+    this.setState({validated: true});
+    const form = event.currentTarget;
+    if (form.checkValidity() === true) {
+      const orderRef = this.props.orderStore.currentOrderRef;
+      const orderData = this.props.orderStore.currentOrder;
+      if (orderData.state === STATES.DRAFT) {
+        orderData.state = STATES.REQUESTED;
+      }
+      this.setState({loading: true});
+      orderRef.set(orderData)
+        .then(() => this.onClose())
+        .catch(error => this.setState({error: error, loading: false}));
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  }
 
-  onChange = event => {
-    this.setState({[event.target.id]: event.target.value});
+  onClose = () => this.props.history.push(ROUTES.ORDERS);
+
+  onChangeField = event => {
+    this.currentOrder()[event.target.id] = event.target.value;
   };
 
-  onChangeCheckBox = event => {
-    this.setState({[event.target.id]: event.target.checked});
+
+  onChangeCategory = event => {
+    const order = this.currentOrder();
+    const category = event.target.id;
+    if (event.target.checked && !order.categories.includes(category)) {
+      this.currentOrder().categories.push(category);
+    } else if (!event.target.checked) {
+      this.currentOrder().categories = order.categories.filter(value => value !== category);
+    }
   };
 
   onChangeDate = date => {
-    this.setState({deadline: date});
+    this.currentOrder().deadline = date;
   };
 
   onUploadFiles = event => {
+    const orderId = this.props.orderStore.currentOrderRef.id;
     const file = event.target.files[0];
-    this.props.firebase.upload(file).then(snapshot => {
-      console.log("uploaded: " + snapshot);
+    this.props.firebase.upload(orderId, file).then(snapshot => {
+      if (!this.currentOrder().files) {
+        this.currentOrder().files = [];
+      }
+      this.currentOrder().files.push(file.name);
     });
   };
 
   render() {
-    const {name, number, quantity, description, deadline, state, validated, error} = this.state;
-
+    const {validated, error, loading} = this.state;
+    const order = this.currentOrder();
     return (
       <>
-        <h1>Order <Badge pill variant="info">{state}</Badge></h1>
+        <h1>Order <Badge pill variant="info">{order.state}</Badge>
+          {loading && <Spinner animation="border"/>}
+        </h1>
         {error ? (<Alert varian="danger">{error.message}</Alert>) :
-          (<Form noValidate validated={validated} onSubmit={e => this.handleSubmit(e)}>
+          (<Form noValidate validated={validated} onSubmit={e => this.onSubmit(e)}>
             <Form.Row>
               <Form.Group as={Col} controlId="name">
                 <Form.Label>Order name</Form.Label>
-                <Form.Control type="text" placeholder="Order name" value={name} onChange={this.onChange} required/>
+                <Form.Control type="text" placeholder="Order name" value={order.name} onChange={this.onChangeField}
+                              required/>
               </Form.Group>
 
               <Form.Group as={Col} md="2" controlId="number">
                 <Form.Label>Order number</Form.Label>
-                <Form.Control type="text" placeholder="Order number" value={number} onChange={this.onChange} required/>
+                <Form.Control type="text" readOnly placeholder="Order number" value={order.number} required/>
               </Form.Group>
             </Form.Row>
 
             <Form.Row>
               <Form.Group as={Col} md="4" controlId="quantity">
                 <Form.Label>Order quantity</Form.Label>
-                <Form.Control type="text" placeholder="Order quantity" value={quantity} onChange={this.onChange}
+                <Form.Control type="text" placeholder="Order quantity" value={order.quantity}
+                              onChange={this.onChangeField}
                               required/>
-                {CATEGORIES.map(cat =>
-                  <Form.Check key={cat} inline label={cat} id={`is${cat}`} onChange={this.onChangeCheckBox}/>
+                {[CATEGORIES.SIID, CATEGORIES.TAMPO, CATEGORIES.TIKAND].map(category =>
+                  <Form.Check key={category} inline label={category} id={category}
+                              checked={order.categories.includes(category)}
+                              onChange={this.onChangeCategory}/>
                 )}
+
               </Form.Group>
             </Form.Row>
 
             <Form.Row>
-              <Form.Group controlId="deadline">
+              <Form.Group as={Col} controlId="deadline">
                 <Form.Label>Requested deadline</Form.Label><br/>
-                <DatePicker selected={deadline} onChange={this.onChangeDate} dateFormat="dd.MM.yyyy"
+                <DatePicker selected={order.deadline} onChange={this.onChangeDate} dateFormat="dd.MM.yyyy"
                             dropdownMode="scroll" className="form-control" id="deadline" required/>
               </Form.Group>
             </Form.Row>
 
             <Form.Row>
-              <Form.Group controlId="description">
+              <Form.Group as={Col} controlId="description">
                 <Form.Label>Description</Form.Label>
-                <Form.Control as="textarea" rows="7" value={description} onChange={this.onChange}/>
+                <Form.Control as="textarea" rows="7" value={order.description} onChange={this.onChangeField}/>
               </Form.Group>
             </Form.Row>
 
             <Form.Row>
               <Form.Group>
-                <Form.Label>Files</Form.Label>
-                <Form.Control name="images[]" type="file" multiple onChange={this.onUploadFiles}/>
+                <Form.Label>Add files</Form.Label>
+                <Form.Control name="files[]" type="file" multiple onChange={this.onUploadFiles}/>
               </Form.Group>
             </Form.Row>
 
-            <Button variant="secondary" onClick={this.closeForm} type="reset">Cancel</Button>
+            {(order.files || []).map(file => <div>{file}</div>)}
+
+            <Button variant="secondary" onClick={this.onClose} type="reset">Cancel</Button>
             <Button variant="primary" type="submit">Submit</Button>
           </Form>)}
       </>
@@ -174,6 +195,6 @@ class OrderForm extends Component {
 export default compose(
   withRouter,
   withFirebase,
-  inject("sessionStore"),
+  inject("sessionStore", "orderStore"),
   observer
 )(OrderForm);

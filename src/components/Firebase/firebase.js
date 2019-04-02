@@ -18,11 +18,12 @@ class Firebase {
     app.initializeApp(config);
 
     /* Helper */
-    this.serverValue = app.database.ServerValue;
+    this.serverValue = app.database.ServerValue; //remove!
     this.emailAuthProvider = app.auth.EmailAuthProvider;
     this.auth = app.auth();
     this.db = app.firestore();
-    this.files = app.storage().ref()
+    this.files = app.storage().ref();
+    this.fieldValue = app.firestore.FieldValue;
   }
 
   //*** Auth API **//
@@ -53,12 +54,13 @@ class Firebase {
 
   //*** Order API **//
   order = uid => this.db.collection("orders").doc(uid);
+  newOrder = () => this.db.collection("orders").doc();
   orders = () => this.db.collection("orders");
   ordersByCompany = (companyCode) => this.orders().where("company", "==", companyCode);
 
   //*** Files API **///
-  upload = file => {
-    const ref = this.files.child(file.name);
+  upload = (orderId, file) => {
+    const ref = this.files.child(`${orderId}/${file.name}`);
     return ref.put(file);
   };
 
