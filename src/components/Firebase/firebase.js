@@ -75,7 +75,7 @@ class Firebase {
             if (!dbUser.roles) {
               dbUser.roles = [];
             }
-            
+
             //merge auth and db users
             authUser = {
               uid: authUser.uid,
@@ -90,10 +90,11 @@ class Firebase {
               this.company(dbUser.companyCode).get()
                 .then(snapshot => {
                   authUser.companyName = snapshot.exists ? snapshot.data().name : "";
+                  next(authUser);
                 });
+            } else {
+              next(authUser);
             }
-
-            next(authUser);
           });
       } else {
         fallback();

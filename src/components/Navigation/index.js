@@ -27,7 +27,9 @@ const NavigationAuth = ({authUser}) => (
             <Nav.Link href={ROUTES.ADMIN}>Admin</Nav.Link>
           )
         }
-        <Nav.Link href={ROUTES.ACCOUNT}>{authUser.username}</Nav.Link>
+        <Nav.Link href={ROUTES.ACCOUNT}>
+          {formatUsername(authUser)}
+        </Nav.Link>
         <Form inline>
           <SignOutButton/>
         </Form>
@@ -35,6 +37,10 @@ const NavigationAuth = ({authUser}) => (
     </Navbar.Collapse>
   </Navbar>
 );
+
+const formatUsername = (authUser) => {
+  return authUser.companyName ? `${authUser.username} [${authUser.companyName}]` : authUser.username;
+};
 
 const NavigationNonAuth = () => (
   <Navbar bg="light" expand="lg">
