@@ -54,6 +54,7 @@ class Firebase {
   //*** Order API **//
   order = uid => this.db.collection("orders").doc(uid);
   orders = () => this.db.collection("orders");
+  ordersByCompany = (companyCode) => this.orders().where("company", "==", companyCode);
 
   //*** Files API **///
   upload = file => {
@@ -68,13 +69,13 @@ class Firebase {
       if (authUser) {
         this.user(authUser.uid).get()
           .then(snapshot => {
-            const dbUser = snapshot.data();
+            const dbUser = snapshot.exists ? snapshot.data() : {};
 
             //default empty roles
             if (!dbUser.roles) {
               dbUser.roles = [];
             }
-
+            
             //merge auth and db users
             authUser = {
               uid: authUser.uid,
@@ -83,6 +84,14 @@ class Firebase {
               providerData: authUser.providerData,
               ...dbUser
             };
+
+            //enrich auth user with company data
+            if (authUser.companyCode) {
+              this.company(dbUser.companyCode).get()
+                .then(snapshot => {
+                  authUser.companyName = snapshot.exists ? snapshot.data().name : "";
+                });
+            }
 
             next(authUser);
           });

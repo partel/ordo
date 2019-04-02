@@ -1,8 +1,8 @@
 import React from "react";
-import { inject } from "mobx-react";
-import { compose } from "recompose";
+import {inject} from "mobx-react";
+import {compose} from "recompose";
 
-import { withFirebase } from "../Firebase";
+import {withFirebase} from "../Firebase";
 
 const withAuthentication = Component => {
   class WithAuthentication extends React.Component {
@@ -34,6 +34,7 @@ const withAuthentication = Component => {
       return <Component {...this.props} />;
     }
   }
+
   return compose(
     withFirebase,
     inject("sessionStore")

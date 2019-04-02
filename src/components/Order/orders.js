@@ -11,7 +11,7 @@ import OrderList from "./ordersList"
 class Orders extends Component {
   constructor(props) {
     super(props);
-    this.state = {text: "", loading: false};
+    this.state = {loading: false};
   }
 
   componentDidMount() {
@@ -25,8 +25,9 @@ class Orders extends Component {
     if (this.unsubscribe) {
       this.unsubscribe();
     }
-    this.unsubscribe = this.props.firebase
-      .orders()
+    const sessionStore = this.props.sessionStore;
+    const query = sessionStore.isAdmin ? this.props.firebase.orders() : this.props.firebase.ordersByCompany(sessionStore.companyCode);
+    this.unsubscribe = query
       .limit(this.props.orderStore.limit)
       .onSnapshot(snapshot => {
         this.props.orderStore.setOrders(snapshot);
@@ -35,7 +36,9 @@ class Orders extends Component {
   }
 
   componentWillUnmount() {
-    this.unsubscribe();
+    if (this.unsubscribe) {
+      this.unsubscribe();
+    }
   }
 
   onNextPage = () => {
@@ -47,10 +50,6 @@ class Orders extends Component {
       this.onListenForOrders();
     }
   }
-
-  onChangeText = event => {
-    this.setState({text: event.target.value});
-  };
 
   onRemoveOrder = uid => {
     this.props.firebase.order(uid).delete();

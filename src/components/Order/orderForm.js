@@ -12,6 +12,7 @@ import DatePicker from "react-datepicker";
 import {compose} from "recompose";
 import {withRouter} from "react-router";
 import {withFirebase} from "../Firebase";
+import {inject, observer} from "mobx-react";
 
 const INITIAL_STATE = {
   name: "",
@@ -73,6 +74,8 @@ class OrderForm extends Component {
         deadline,
         state
       };
+      orderData.creator = this.props.sessionStore.authUser.uid;
+      orderData.company = this.props.sessionStore.companyCode;
       if (this.isNew()) {
         this.props.firebase.orders().add(orderData)
           .then(() => this.closeForm())
@@ -170,5 +173,7 @@ class OrderForm extends Component {
 
 export default compose(
   withRouter,
-  withFirebase
+  withFirebase,
+  inject("sessionStore"),
+  observer
 )(OrderForm);
