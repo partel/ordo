@@ -1,4 +1,5 @@
 import {action, computed, decorate, observable} from "mobx";
+import * as STATES from "../constants/states";
 
 /*
 order:
@@ -14,6 +15,7 @@ order:
 class OrderStore {
   orders = null;
   limit = 5;
+  stateFilter = STATES.REQUESTED;
   currentOrder = null;
   currentOrderRef = null;
 
@@ -30,6 +32,10 @@ class OrderStore {
     this.limit = limit;
   };
 
+  setStateFilter = newState => {
+    this.stateFilter = newState;
+  };
+
   setCurrentOrder = order => {
     this.currentOrder = order;
   };
@@ -39,20 +45,24 @@ class OrderStore {
   };
 
   get ordersList() {
-    return Object.keys(this.orders || {}).map(key => ({
-      ...this.orders[key],
-      uid: key
-    }));
+    return Object.keys(this.orders || {})
+      .map(key => ({
+        ...this.orders[key],
+        uid: key
+      }))
+      .filter(order => order.state === this.stateFilter);
   }
 }
 
 export default decorate(OrderStore, {
   orders: observable,
   limit: observable,
+  stateFilter: observable,
   currentOrder: observable,
   currentOrderSnapshot: observable,
   setOrders: action,
   setLimit: action,
+  setStateFilter: action,
   setCurrentOrder: action,
   setCurrentOrderSnapshot: action,
   ordersList: computed

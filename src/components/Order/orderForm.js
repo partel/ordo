@@ -182,7 +182,7 @@ class OrderForm extends Component {
               </Form.Group>
             </Form.Row>
 
-            {(order.files || []).map(file => <div>{file}</div>)}
+            {(order.files || []).map(file => <div key={file}>{file}</div>)}
 
             <Button variant="secondary" onClick={this.onClose} type="reset">Cancel</Button>
             <Button variant="primary" type="submit">Submit</Button>

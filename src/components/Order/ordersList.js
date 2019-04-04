@@ -1,49 +1,51 @@
-import React, {Component} from "react";
+import React from "react";
 import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import CardDeck from "react-bootstrap/CardDeck";
-import * as ROUTES from "../../constants/routes";
 import {withRouter} from "react-router-dom";
+import {compose} from "recompose";
+import {inject, observer} from "mobx-react";
+import * as STATES from "../../constants/states";
 
-class OrderItem extends Component {
-  onEditOrder = uid => {
-    this.props.history.push({
-      pathname: `${ROUTES.ORDERS}/${uid}`
-    });
-  };
+const OrderCard = (props) => {
+  const canCancel = props.order.state === STATES.REQUESTED || (props.isAdmin && props.order.state !== STATES.CANCELLED);
+  const canMarkDone = (props.isAdmin && props.order.state === STATES.CONFIRMED);
+  const canConfirm = (props.isAdmin && props.order.state === STATES.REQUESTED);
+  const order = props.order;
+  return <Card style={{width: "18rem"}}>
+    <Card.Header>
+      <Button variant="outline-primary" onClick={() => props.onOpen(order.uid)}>{props.order.number}</Button>
+    </Card.Header>
+    <Card.Body>
+      <Card.Title>{props.order.name}</Card.Title>
+      <Card.Subtitle className="mb-2 text-muted">{props.order.quantity}</Card.Subtitle>
+      <Card.Text>{props.order.description}</Card.Text>
+    </Card.Body>
+    <Card.Footer>
+      {canCancel && <Button variant="secondary" onClick={props.onCancel}>Cancel Order</Button>}
+      {canMarkDone && <Button variant="primary" onClick={() => props.onDone(order.uid)}>Done</Button>}
+      {canConfirm && <Button variant="primary" onClick={() => props.onDone(order.uid, new Date())}>Confirm</Button>}
+    </Card.Footer>
+  </Card>;
+};
 
-  render() {
-    const {order, onRemoveOrder} = this.props;
-
-    return (
-      <Card style={{width: '18rem'}}>
-        <Card.Header>{order.number}</Card.Header>
-        <Card.Body>
-          <Card.Title>{order.name}</Card.Title>
-          <Card.Subtitle className="mb-2 text-muted">{order.quantity}</Card.Subtitle>
-          <Card.Text>{order.description}</Card.Text>
-
-          <Button variant="secondary" onClick={() => onRemoveOrder(order.uid)}>Delete</Button>
-          <Button variant="primary" onClick={() => this.onEditOrder(order.uid)}>Edit</Button>
-        </Card.Body>
-      </Card>
-    );
-  }
-}
-
-const OrderWithRouter = withRouter(OrderItem);
-
-const OrdersList = ({orders, onEditOrder, onRemoveOrder}) => (
+const OrdersList = ({orderStore, sessionStore, onCancelOrder, onOrderDone, onConfirmOrder, onOpenOrder}) => (
   <CardDeck>
-    {orders.map(order => (
-      <OrderWithRouter
-        key={order.uid}
-        order={order}
-        onEditOrder={onEditOrder}
-        onRemoveOrder={onRemoveOrder}
+    {orderStore.ordersList.map(order => (
+      <OrderCard key={order.uid}
+                 order={order}
+                 isAdmin={sessionStore.isAdmin}
+                 onCancel={onCancelOrder}
+                 onOpen={onOpenOrder}
+                 onDone={onOrderDone}
+                 onConfirm={onConfirmOrder}
       />
     ))}
   </CardDeck>
 );
 
-export default OrdersList;
+export default compose(
+  withRouter,
+  inject("sessionStore", "orderStore"),
+  observer
+)(OrdersList);

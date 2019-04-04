@@ -5,13 +5,17 @@ import {withFirebase} from "../Firebase";
 import Spinner from "react-bootstrap/Spinner";
 import Button from "react-bootstrap/Button";
 import * as ROUTES from "../../constants/routes";
+import * as STATES from "../../constants/states";
 
 import OrderList from "./ordersList"
+import Alert from "react-bootstrap/Alert";
+import ToggleButtonGroup from "react-bootstrap/ToggleButtonGroup";
+import ToggleButton from "react-bootstrap/ToggleButton";
 
 class Orders extends Component {
   constructor(props) {
     super(props);
-    this.state = {loading: false};
+    this.state = {loading: false, error: null};
   }
 
   componentDidMount() {
@@ -28,11 +32,15 @@ class Orders extends Component {
     const sessionStore = this.props.sessionStore;
     const query = sessionStore.isAdmin ? this.props.firebase.orders() : this.props.firebase.ordersByCompany(sessionStore.companyCode);
     this.unsubscribe = query
+    //.orderBy("createdAt", "desc")
       .limit(this.props.orderStore.limit)
-      .onSnapshot(snapshot => {
-        this.props.orderStore.setOrders(snapshot);
-        this.setState({loading: false});
-      });
+      .onSnapshot(
+        snapshot => {
+          this.props.orderStore.setOrders(snapshot);
+          this.setState({loading: false, error: null});
+        },
+        error => this.setState({loading: false, error: error},
+          () => this.setState({loading: false})));
   }
 
   componentWillUnmount() {
@@ -51,11 +59,30 @@ class Orders extends Component {
     }
   }
 
-  onRemoveOrder = uid => {
-    this.props.firebase.order(uid).delete();
+  onCancelOrder = uid => {
+    this.props.firebase.order(uid).update({
+      state: STATES.CANCELLED
+    }).catch(error =>
+      this.setState({error: error}));
   };
 
-  onEditOrder = uid => {
+  onOrderDone = uid => {
+    this.props.firebase.order(uid).update({
+      state: STATES.DONE,
+      doneAt: this.props.firebase.fieldValue.serverTimestamp()
+    }).catch(error =>
+      this.setState({error: error}));
+  };
+
+  onConfirmOrder = (uid, plannedDate) => {
+    this.props.firebase.order(uid).update({
+      state: STATES.CONFIRMED,
+      plannedDoneAt: plannedDate
+    }).catch(error =>
+      this.setState({error: error}));
+  };
+
+  onOpenOrder = uid => {
     this.props.history.push(`${ROUTES.ORDERS}/${uid}`);
   };
 
@@ -63,34 +90,39 @@ class Orders extends Component {
     this.props.history.push(`${ROUTES.ORDERS}/${"new"}`);
   };
 
+  onChangeFilter = (value) => {
+    this.props.orderStore.setStateFilter(value);
+  };
+
   render() {
-    const {users, orderStore} = this.props;
-    const {loading} = this.state;
+    const {orderStore} = this.props;
+    const {loading, error} = this.state;
     const orders = orderStore.ordersList;
 
     return (
       <div>
         <h1>Active orders <Button variant="outline-primary" onClick={this.newOrder}>Add New</Button></h1>
 
-        {loading && <Spinner animation="border"/>}
+        <ToggleButtonGroup type="radio" name="filter" value={orderStore.stateFilter} onChange={this.onChangeFilter}>
+          <ToggleButton value={STATES.REQUESTED}>{STATES.REQUESTED}</ToggleButton>
+          <ToggleButton value={STATES.CONFIRMED}>{STATES.CONFIRMED}</ToggleButton>
+          <ToggleButton value={STATES.DONE}>{STATES.DONE}</ToggleButton>
+        </ToggleButtonGroup>
 
-        {orders ? (
+        {loading && <Spinner animation="border"/>}
+        {error && <Alert variant="danger">{`${error.code}: ${error.message}`}</Alert>}
+        {orders && orders.length ? (
           <OrderList
-            orders={orders.map(order => ({
-              ...order,
-              user:
-                users && users[order.userId]
-                  ? users[order.userId]
-                  : {userId: order.userId}
-            }))}
-            onEditOrder={this.onEditOrder}
-            onRemoveOrder={this.onRemoveOrder}
+            onCancelOrder={this.onCancelOrder}
+            onOrderDone={this.onOrderDone}
+            onConfirmOrder={this.onConfirmOrder}
+            onOpenOrder={this.onOpenOrder}
           />
         ) : (
-          <div>There are no orders...</div>
+          <Alert variant="warning">There are no orders...</Alert>
         )}
 
-        {!loading && orders && (
+        {orders && orders.length === this.props.orderStore.limit && (
           <button type="button" onClick={this.onNextPage}>
             More
           </button>
