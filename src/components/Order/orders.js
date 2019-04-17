@@ -11,6 +11,7 @@ import OrderList from "./ordersList"
 import Alert from "react-bootstrap/Alert";
 import ToggleButtonGroup from "react-bootstrap/ToggleButtonGroup";
 import ToggleButton from "react-bootstrap/ToggleButton";
+import {withTranslation} from "react-i18next";
 
 class Orders extends Component {
   constructor(props) {
@@ -95,18 +96,18 @@ class Orders extends Component {
   };
 
   render() {
-    const {orderStore} = this.props;
+    const {orderStore, t} = this.props;
     const {loading, error} = this.state;
     const orders = orderStore.ordersList;
 
     return (
       <div>
-        <h1>Active orders <Button variant="outline-primary" onClick={this.newOrder}>Add New</Button></h1>
+        <h1>{t("Orders")}<Button variant="outline-primary" onClick={this.newOrder}>{t("Add New")}</Button></h1>
 
         <ToggleButtonGroup type="radio" name="filter" value={orderStore.stateFilter} onChange={this.onChangeFilter}>
-          <ToggleButton value={STATES.REQUESTED}>{STATES.REQUESTED}</ToggleButton>
-          <ToggleButton value={STATES.CONFIRMED}>{STATES.CONFIRMED}</ToggleButton>
-          <ToggleButton value={STATES.DONE}>{STATES.DONE}</ToggleButton>
+          <ToggleButton value={STATES.REQUESTED}>{t(STATES.REQUESTED)}</ToggleButton>
+          <ToggleButton value={STATES.CONFIRMED}>{t(STATES.CONFIRMED)}</ToggleButton>
+          <ToggleButton value={STATES.DONE}>{t(STATES.DONE)}</ToggleButton>
         </ToggleButtonGroup>
 
         {loading && <Spinner animation="border"/>}
@@ -119,7 +120,7 @@ class Orders extends Component {
             onOpenOrder={this.onOpenOrder}
           />
         ) : (
-          <Alert variant="warning">There are no orders...</Alert>
+          <Alert variant="warning">{t("There are no orders...")}</Alert>
         )}
 
         {orders && orders.length === this.props.orderStore.limit && (
@@ -133,6 +134,7 @@ class Orders extends Component {
 }
 
 export default compose(
+  withTranslation(),
   withFirebase,
   inject("orderStore", "sessionStore"),
   observer
