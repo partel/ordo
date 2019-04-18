@@ -5,6 +5,7 @@ import {compose} from "recompose";
 import {withFirebase} from "../Firebase";
 import * as ROUTES from "../../constants/routes";
 import Form from "react-bootstrap/Form";
+import {withTranslation} from "react-i18next";
 
 const SignInUpPage = () => (
   <>
@@ -29,7 +30,7 @@ class SignUpFormBase extends Component {
 
   onSubmit = event => {
     const {username, email, passwordOne} = this.state;
-    
+
     this.props.firebase
       .doCreateUserWithEmailAndPassword(email, passwordOne)
       .then(authUser => {
@@ -68,6 +69,7 @@ class SignUpFormBase extends Component {
       passwordOne === "" ||
       email === "" ||
       username === "";
+    const {t} = this.props;
 
     return (
       <Form onSubmit={this.onSubmit}>
@@ -76,32 +78,32 @@ class SignUpFormBase extends Component {
           value={username}
           onChange={this.onChange}
           type="text"
-          placeholder="Full Name"
+          placeholder={t("signUp:Full Name")}
         />
         <input
           name="email"
           value={email}
           onChange={this.onChange}
           type="text"
-          placeholder="Email Address"
+          placeholder={t("signUp:Email Address")}
         />
         <input
           name="passwordOne"
           value={passwordOne}
           onChange={this.onChange}
           type="password"
-          placeholder="Password"
+          placeholder={t("signUp:Password")}
         />
         <input
           name="passwordTwo"
           value={passwordTwo}
           onChange={this.onChange}
           type="password"
-          placeholder="Confirm Password"
+          placeholder={t("signUp:Confirm Password")}
         />
 
         <button type="submin" disabled={isInvalid}>
-          Sign Up
+          {t("signUp:Sign Up")}
         </button>
 
         {error && <p>{error.message}</p>}
@@ -110,15 +112,16 @@ class SignUpFormBase extends Component {
   }
 }
 
-const SignUpLink = () => (
+const SignUpLink = withTranslation()(({t}) => (
   <p>
-    Don't have an account? <Link to={ROUTES.SIGN_UP}>Sign Up</Link>
+    {t("signUp:Don't have an account?")} <Link to={ROUTES.SIGN_UP}>{t("signUp:Sign Up")}</Link>
   </p>
-);
+));
 
 const SignUpForm = compose(
   withRouter,
-  withFirebase
+  withFirebase,
+  withTranslation()
 )(SignUpFormBase);
 
 export default SignInUpPage;

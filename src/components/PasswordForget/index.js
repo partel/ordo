@@ -4,10 +4,12 @@ import {Link} from "react-router-dom";
 import {withFirebase} from "../Firebase";
 import * as ROUTES from "../../constants/routes";
 import Form from "react-bootstrap/Form";
+import {withTranslation} from "react-i18next";
+import {compose} from "recompose";
 
-const PasswordForgetPage = () => (
+const PasswordForgetPage = ({t}) => (
   <>
-    <h1>Password forget</h1>
+    <h1>{t("passForget:Password forget")}</h1>
     <PasswordForgetForm/>
   </>
 );
@@ -45,6 +47,7 @@ class PasswordForgetFormBase extends Component {
   render() {
     const {email, error} = this.state;
     const isInvalid = email === "";
+    const {t} = this.props;
 
     return (
       <Form onSubmit={this.onSubmit}>
@@ -53,10 +56,10 @@ class PasswordForgetFormBase extends Component {
           value={this.state.email}
           onChange={this.onChange}
           type="text"
-          placeholder="Email Address"
+          placeholder={t("passForget:Email Address")}
         />
         <button disabled={isInvalid} type="submit">
-          Reset My Password
+          {t("passForget:Reset My Password")}
         </button>
 
         {error && <p>{error.message}</p>}
@@ -65,14 +68,17 @@ class PasswordForgetFormBase extends Component {
   }
 }
 
-const PasswordForgetLink = () => (
+const PasswordForgetLink = withTranslation()(({t}) => (
   <p>
-    <Link to={ROUTES.PASSWORD_FORGET}>Forgot Password</Link>
+    <Link to={ROUTES.PASSWORD_FORGET}>{t("passForgetLink:Forgot Password")}</Link>
   </p>
-);
+));
 
-export default PasswordForgetPage;
+export default withTranslation()(PasswordForgetPage);
 
-const PasswordForgetForm = withFirebase(PasswordForgetFormBase);
+const PasswordForgetForm = compose(
+  withTranslation(),
+  withFirebase
+)(PasswordForgetFormBase);
 
 export {PasswordForgetForm, PasswordForgetLink};

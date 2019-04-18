@@ -6,10 +6,10 @@ import {withRouter} from "react-router-dom";
 import {compose} from "recompose";
 import {inject, observer} from "mobx-react";
 import * as STATES from "../../constants/states";
-import {withTranslation} from "react-i18next";
+import {useTranslation} from "react-i18next";
 
 const OrderCard = (props) => {
-  const {t} = props;
+  const {t} = useTranslation();
   const canCancel = props.order.state === STATES.REQUESTED || (props.isAdmin && props.order.state !== STATES.CANCELLED);
   const canMarkDone = (props.isAdmin && props.order.state === STATES.CONFIRMED);
   const canConfirm = (props.isAdmin && props.order.state === STATES.REQUESTED);
@@ -24,15 +24,17 @@ const OrderCard = (props) => {
       <Card.Text>{props.order.description}</Card.Text>
     </Card.Body>
     <Card.Footer>
-      {canCancel && <Button variant="secondary" onClick={props.onCancel}>{t("Cancel Order")}</Button>}
-      {canMarkDone && <Button variant="primary" onClick={() => props.onDone(order.uid)}>{t("Done")}</Button>}
+      {canCancel && <Button variant="secondary" onClick={props.onCancel}>{t("orders:Cancel Order")}</Button>}
+      {canMarkDone &&
+      <Button variant="primary" onClick={() => props.onDone(order.uid)}>{t("orders:Mark Order Done")}</Button>}
       {canConfirm &&
-      <Button variant="primary" onClick={() => props.onDone(order.uid, new Date())}>{t("Confirm")}</Button>}
+      <Button variant="primary"
+              onClick={() => props.onConfirm(order.uid, new Date())}>{t("orders:Confirm Order")}</Button>}
     </Card.Footer>
   </Card>;
 };
 
-const OrdersList = ({orderStore, sessionStore, onCancelOrder, onOrderDone, onConfirmOrder, onOpenOrder, t}) => (
+const OrdersList = ({orderStore, sessionStore, onCancelOrder, onOrderDone, onConfirmOrder, onOpenOrder}) => (
   <CardDeck>
     {orderStore.ordersList.map(order => (
       <OrderCard key={order.uid}
@@ -42,14 +44,12 @@ const OrdersList = ({orderStore, sessionStore, onCancelOrder, onOrderDone, onCon
                  onOpen={onOpenOrder}
                  onDone={onOrderDone}
                  onConfirm={onConfirmOrder}
-                 t={t}
       />
     ))}
   </CardDeck>
 );
 
 export default compose(
-  withTranslation(),
   withRouter,
   inject("sessionStore", "orderStore"),
   observer

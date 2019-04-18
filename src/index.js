@@ -1,16 +1,20 @@
 import React from "react";
+import "./translations/i18n"
 import ReactDOM from "react-dom";
-import { Provider } from "mobx-react";
-
+import {Provider} from "mobx-react";
 import store from "./stores";
 import App from "./components/App";
-import Firebase, { FirebaseContext } from "./components/Firebase";
+import Firebase, {FirebaseContext} from "./components/Firebase";
+
+store.firebase = new Firebase();
+
 
 ReactDOM.render(
-  <Provider {...store}>
-    <FirebaseContext.Provider value={new Firebase()}>
-      <App />
-    </FirebaseContext.Provider>
-  </Provider>,
+  <FirebaseContext.Provider value={store.firebase}>
+    <Provider {...store}>
+      <App/>
+    </Provider>
+  </FirebaseContext.Provider>,
   document.getElementById("root")
 );
+

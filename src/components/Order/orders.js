@@ -102,12 +102,14 @@ class Orders extends Component {
 
     return (
       <div>
-        <h1>{t("Orders")}<Button variant="outline-primary" onClick={this.newOrder}>{t("Add New")}</Button></h1>
+        <h1>{t("orders:Orders")}<Button variant="outline-primary"
+                                        onClick={this.newOrder}>{t("orders:New Order")}</Button>
+        </h1>
 
         <ToggleButtonGroup type="radio" name="filter" value={orderStore.stateFilter} onChange={this.onChangeFilter}>
-          <ToggleButton value={STATES.REQUESTED}>{t(STATES.REQUESTED)}</ToggleButton>
-          <ToggleButton value={STATES.CONFIRMED}>{t(STATES.CONFIRMED)}</ToggleButton>
-          <ToggleButton value={STATES.DONE}>{t(STATES.DONE)}</ToggleButton>
+          <ToggleButton value={STATES.REQUESTED}>{t(`orders:${STATES.REQUESTED}`)}</ToggleButton>
+          <ToggleButton value={STATES.CONFIRMED}>{t(`orders:${STATES.CONFIRMED}`)}</ToggleButton>
+          <ToggleButton value={STATES.DONE}>{t(`orders:${STATES.DONE}`)}</ToggleButton>
         </ToggleButtonGroup>
 
         {loading && <Spinner animation="border"/>}
@@ -122,7 +124,6 @@ class Orders extends Component {
         ) : (
           <Alert variant="warning">{t("There are no orders...")}</Alert>
         )}
-
         {orders && orders.length === this.props.orderStore.limit && (
           <button type="button" onClick={this.onNextPage}>
             More
