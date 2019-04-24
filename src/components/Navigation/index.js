@@ -10,6 +10,7 @@ import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import Form from "react-bootstrap/Form";
 import {withTranslation} from "react-i18next";
+import {Link} from "react-router-dom";
 
 const Navigation = ({sessionStore}) => (sessionStore.authUser
   ? <NavigationAuth authUser={sessionStore.authUser}/>
@@ -18,19 +19,17 @@ const Navigation = ({sessionStore}) => (sessionStore.authUser
 
 const NavigationAuth = withTranslation()(({authUser, t}) => (
   <Navbar bg="light" expand="lg">
-    <Navbar.Brand href={ROUTES.LANDING}>{t("navbar:Ordo")}</Navbar.Brand>
+    <Link className="navbar-brand" to={ROUTES.LANDING}>{t("navbar:Ordo")}</Link>
     <Navbar.Toggle aria-controls="basic-navbar-nav"/>
     <Navbar.Collapse id="basic-navbar-nav">
       <Nav>
-        <Nav.Link href={ROUTES.ORDERS}>{t("navbar:Orders")}</Nav.Link>
+        <Link className="nav-link" to={ROUTES.ORDERS}>{t("navbar:Orders")}</Link>
         {
           authUser.roles.includes(ROLES.ADMIN) && (
-            <Nav.Link href={ROUTES.ADMIN}>{t("navbar:Admin")}</Nav.Link>
+            <Link className="nav-link" to={ROUTES.ADMIN}>{t("navbar:Admin")}</Link>
           )
         }
-        <Nav.Link href={ROUTES.ACCOUNT}>
-          {formatUsername(authUser)}
-        </Nav.Link>
+        <Link className="nav-link" to={ROUTES.ACCOUNT}>{formatUsername(authUser)}</Link>
         <Form inline>
           <SignOutButton/>
         </Form>
@@ -46,9 +45,8 @@ const formatUsername = (authUser) => {
 const NavigationNonAuth = withTranslation()(({t}) => (
   <Navbar bg="light" expand="lg">
     <Nav>
-      <Navbar.Brand href={ROUTES.LANDING}>{t("navbar:Ordo")}</Navbar.Brand>
-
-      <Nav.Link href={ROUTES.SIGN_IN}>{t("navbar:Sign In")}</Nav.Link>
+      <Link className="navbar-brand" to={ROUTES.LANDING}>{t("navbar:Ordo")}</Link>
+      <Link className="nav-link" to={ROUTES.SIGN_IN}>{t("navbar:Sign In")}</Link>
     </Nav>
   </Navbar>
 ));
