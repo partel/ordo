@@ -5,7 +5,9 @@ import {Provider} from "mobx-react";
 import store from "./stores";
 import App from "./components/App";
 import Firebase, {FirebaseContext} from "./components/Firebase";
+import {enableLogging} from "mobx-logger";
 
+enableLogging();
 store.firebase = new Firebase();
 
 
