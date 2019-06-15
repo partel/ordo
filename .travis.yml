@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "4.0"
+  - "8"
 script:
   - echo "Deploying!"
 install:
@@ -8,3 +8,6 @@ install:
   - npm ci
 after_success:
   - firebase deploy --token $FIREBASE_TOKEN
+branches:
+  only:
+    - master
